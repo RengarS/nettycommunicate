@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.ReferenceCountUtil;
 import nettytimeserver.domain.Request;
 import nettytimeserver.domain.Response;
 import nettytimeserver.utils.Const;
@@ -34,6 +35,7 @@ public class TimeServerHandler extends ChannelHandlerAdapter {
         } else if (Const.REQUEST_SEND.equals(request.getAction())) {
             Response response = new Response(request.getSender(), request.getTime(), request.getContent());
             ByteBuf byteBuf1 = Unpooled.copiedBuffer(SerializableUtils.SerializableObject(response, Response.class));
+            ReferenceCountUtil.retain(byteBuf1, channelIdChannelMap.values().size() - 2);
             for (Map.Entry<String, Channel> entry : channelIdChannelMap.entrySet()) {
                 if (!entry.getKey().equals(request.getSender()) && entry.getValue().isActive()) {
                     entry.getValue().writeAndFlush(byteBuf1);
